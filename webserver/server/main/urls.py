@@ -18,4 +18,5 @@ from . import views
 
 urlpatterns = [
     path('', views.main),
+    path('time', views.timeToSleep),
 ]
