@@ -59,7 +59,7 @@ func request(url string, reqCnt int, conType int, message chan Status) {
 		latency := time.Since(start)
 		code := -1
 		if err != nil {
-			fmt.Println(err)
+			// fmt.Println(err)
 		} else {
 			code = resp.StatusCode
 			resp.Body.Close()
@@ -89,7 +89,7 @@ func main() {
 	}
 	message := make(chan Status)
 	status := make(map[int][]float32)
-	numEach := numReq / numCon
+	numEach := (numReq + numCon - 1) / numCon
 	for total := numReq; total > 0; total -= numEach {
 		wg.Add(1)
 		go request(flag.Arg(0), min(total, numEach), conType, message)
