@@ -20,7 +20,7 @@ def plot():
         lat.append(tl)
 
     for i in range(4):
-        sns.lineplot(x=xlabels, y=lat[i], label=f'{i}')
+        sns.lineplot(x=xlabels, y=frate[i], label=f'{i}')
 
     plt.show()
 

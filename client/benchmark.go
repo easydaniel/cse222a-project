@@ -77,7 +77,7 @@ func min(a, b int) int {
 
 func main() {
 	var numReq int
-	flag.IntVar(&numReq, "n", 1000, "# of requests")
+	flag.IntVar(&numReq, "n", 30, "# of requests for each connection")
 	var numCon int
 	flag.IntVar(&numCon, "c", 10, "# of connections")
 	var conType int
@@ -89,10 +89,9 @@ func main() {
 	}
 	message := make(chan Status)
 	status := make(map[int][]float32)
-	numEach := (numReq + numCon - 1) / numCon
-	for total := numReq; total > 0; total -= numEach {
+	for idx := 0; idx < numCon; idx++ {
 		wg.Add(1)
-		go request(flag.Arg(0), min(total, numEach), conType, message)
+		go request(flag.Arg(0), numReq, conType, message)
 	}
 
 	go func() {
