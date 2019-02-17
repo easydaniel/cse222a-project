@@ -19,4 +19,8 @@ from . import views
 urlpatterns = [
     path('', views.main),
     path('time', views.timeToSleep),
+    path('populateData', views.populateData),
+    path('removeData', views.removeData),
+    path('pingOther', views.pingOther),
+    path('queryData', views.queryData),
 ]
