@@ -25,7 +25,7 @@ SECRET_KEY = '0c7u^q+9f%dl@_xquo!f-6v+qo6r%cqo-^o1#538d#h6e!l%bv'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['dev-env.jvrb83sqrz.us-west-2.elasticbeanstalk.com', '127.0.0.1:8000']
+ALLOWED_HOSTS = ['dev-env.jvrb83sqrz.us-west-2.elasticbeanstalk.com', '127.0.0.1']
 
 
 # Application definition
@@ -76,8 +76,12 @@ WSGI_APPLICATION = 'server.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'testdb',
+        'USER': 'tester',
+        'PASSWORD': 'tester',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
