@@ -23,10 +23,13 @@ def timeToSleep(request):
 
 def populateData(request):
     amount = request.GET.get("amount", "100")
+    ClientList = []
     for i in range(int(amount)):
         name = "FakeName" + str(randint(0, 100))
         age = randint(10, 30)
-        Client.objects.create(Name = name, Age = age).save()
+        ClientList.append((Client(Name=name, Age=age)))
+
+    Client.objects.bulk_create(ClientList)
     return HttpResponse("Populate Done")
 
 
