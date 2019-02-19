@@ -122,7 +122,7 @@ func min(a, b int) int {
 
 func reqlatency(numCon, numReq, conType int) {
 
-	message := make(chan Status)
+	message := make(chan Status, numCon*numReq)
 	status := make(map[int][]float32)
 	url := flag.Arg(0)
 	start := time.Now()

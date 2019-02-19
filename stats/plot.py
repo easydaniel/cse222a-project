@@ -1,37 +1,34 @@
 from matplotlib import pyplot as plt
 import seaborn as sns
+import numpy as np
 
-REQLAT_PATH = './reqlat'
+REQLAT_PATH = './reqlat.ds.2'
 
 
-def plot():
+def plot(tp=0):
     sns.set_style('whitegrid')
     plt.figure(figsize=(12, 6))
     plt.xlabel('# of connections')
-    plt.ylabel('Failure rate')
-    # plt.ylabel('Latency (ms)')
+    ylabel = ['Failure rate', 'Latency (ms)', 'Throughput(req/s)']
+    plt.ylabel(ylabel[tp])
+
     dataset = [list(map(float, v.split()))
                for v in open(REQLAT_PATH, 'r').readlines()]
-    frate, lat = [], []
+    dataset = np.array(dataset)
+
     xticks = list(range(20, 501, 20))
     plt.xticks(xticks)
 
-    idx = 0
-    for _ in range(4):
-        tf, tl = [], []
-        for _ in range(20, 501, 20):
-            tf.append(dataset[idx][0])
-            tl.append(dataset[idx][1])
-            idx += 1
-        frate.append(tf)
-        lat.append(tl)
     labels = ['Normal Requests (0ms)', 'Short Requests (100ms)',
               'Long Requests (500ms)', 'Mixed']
-    for i in range(4):
-        sns.lineplot(x=xticks, y=frate[i], label=labels[i])
 
-    plt.savefig('failrate.png')
+    for i in range(4):
+        sns.lineplot(x=xticks, y=dataset[:, tp]
+                     [i*len(xticks): (i+1)*len(xticks)], label=labels[i])
+    fname = ['failrate.png', 'reqlatency.png', 'throughput.png']
+    plt.savefig(fname[tp])
 
 
 if __name__ == "__main__":
-    plot()
+    for i in range(3):
+        plot(i)
