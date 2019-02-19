@@ -16,6 +16,11 @@ type Status struct {
 	code    int
 }
 
+type Request struct {
+	url    string
+	params map[string]string
+}
+
 var wg sync.WaitGroup
 
 func qs(params map[string]string) string {
@@ -48,12 +53,31 @@ func genParam(conType int) map[string]string {
 	return param
 }
 
+func genEndpoint(conType int) string {
+	s := ""
+	return s
+	if conType == 3 {
+		r := rand.Intn(2)
+		if r == 1 {
+			s = "/ep1"
+		} else {
+			s = "/ep2"
+		}
+	} else if conType == 2 {
+		s = "/ep2"
+	} else if conType == 1 {
+		s = "/ep1"
+	}
+	return s
+}
+
 func request(url string, reqCnt int, conType int, message chan Status) {
 	defer wg.Done()
 
 	for idx := 0; idx < reqCnt; idx++ {
 		qstr := qs(genParam(conType))
-		endpoint := fmt.Sprintf("%s?%s", url, qstr)
+		ep := genEndpoint(conType)
+		endpoint := fmt.Sprintf("%s%s?%s", url, ep, qstr)
 		start := time.Now()
 		resp, err := http.Get(endpoint)
 		latency := time.Since(start)
@@ -67,6 +91,27 @@ func request(url string, reqCnt int, conType int, message chan Status) {
 		message <- Status{latency, code}
 	}
 }
+func consumer(reqCnt int, works chan Request, message chan Status) {
+	defer wg.Done()
+
+	for idx := 0; idx < reqCnt; idx++ {
+		req := <-works
+		fmt.Println(req)
+		// qstr := qs(req.params)
+		// endpoint := fmt.Sprintf("%s?%s", req.url, qstr)
+		start := time.Now()
+		// resp, err := http.Get(endpoint)
+		latency := time.Since(start)
+		code := -1
+		// if err != nil {
+		// 	// fmt.Println(err)
+		// } else {
+		// 	code = resp.StatusCode
+		// 	resp.Body.Close()
+		// }
+		message <- Status{latency, code}
+	}
+}
 
 func min(a, b int) int {
 	if a < b {
@@ -75,23 +120,54 @@ func min(a, b int) int {
 	return b
 }
 
-func main() {
-	var numReq int
-	flag.IntVar(&numReq, "n", 30, "# of requests for each connection")
-	var numCon int
-	flag.IntVar(&numCon, "c", 10, "# of connections")
-	var conType int
-	flag.IntVar(&conType, "t", 0, "type of connection: 1: short, 2: long, 3: mix")
-	flag.Parse()
-	if len(flag.Args()) != 1 {
-		fmt.Printf("Usage: benchmark [options] <url>\n")
-		return
-	}
+func reqlatency(numCon, numReq, conType int) {
+
 	message := make(chan Status)
 	status := make(map[int][]float32)
+	url := flag.Arg(0)
+	start := time.Now()
 	for idx := 0; idx < numCon; idx++ {
 		wg.Add(1)
-		go request(flag.Arg(0), numReq, conType, message)
+		go request(url, numReq, conType, message)
+	}
+
+	go func() {
+		for result := range message {
+			status[result.code] = append(status[result.code], (float32(result.latency) / 1000000))
+		}
+	}()
+	wg.Wait()
+	duration := time.Since(start)
+	close(message)
+	// fmt.Fprintf(os.Stderr, "Total: %d, Num: %d, Con: %d\n", len(status[200]), numReq, numCon)
+	failRate := float32(len(status[-1])) / (float32(numReq) * float32(numCon))
+	throughput := (float32(numReq) * float32(numCon)) / (float32(duration) / 1000000)
+	avgLatency := float32(0)
+	for _, latency := range status[200] {
+		avgLatency = avgLatency + latency
+	}
+	fmt.Printf("%f %f %f\n", failRate, avgLatency/float32(len(status[200])), throughput)
+}
+
+func orderedReq(numCon, numReq, srvCnt int) {
+	message := make(chan Status)
+	works := make(chan Request, numCon*numReq)
+	status := make(map[int][]float32)
+	url := flag.Arg(0)
+	for idx := 0; idx < numCon*numReq; idx++ {
+		params := make(map[string]string)
+
+		if idx%srvCnt == 0 {
+			params["amount"] = "100000"
+		} else {
+			params["amount"] = "1000"
+		}
+
+		works <- Request{url, params}
+	}
+	for idx := 0; idx < numCon; idx++ {
+		wg.Add(1)
+		go consumer(numReq, works, message)
 	}
 
 	go func() {
@@ -102,10 +178,28 @@ func main() {
 	wg.Wait()
 	close(message)
 	// fmt.Fprintf(os.Stderr, "Total: %d, Num: %d, Con: %d\n", len(status[200]), numReq, numCon)
-	failRate := float32(len(status[-1])) / float32(numReq)
+	failRate := float32(len(status[-1])) / (float32(numReq) * float32(numCon))
 	avgLatency := float32(0)
 	for _, latency := range status[200] {
 		avgLatency = avgLatency + latency
 	}
 	fmt.Printf("%f %f\n", failRate, avgLatency/float32(len(status[200])))
+}
+
+func main() {
+	var numReq int
+	flag.IntVar(&numReq, "n", 30, "# of requests for each connection")
+	var numCon int
+	flag.IntVar(&numCon, "c", 10, "# of connections")
+	var conType int
+	flag.IntVar(&conType, "t", 0, "type of connection: 1: short, 2: long, 3: mix")
+	var srvCnt int
+	flag.IntVar(&srvCnt, "s", 1, "server count")
+	flag.Parse()
+	if len(flag.Args()) != 1 {
+		fmt.Printf("Usage: benchmark [options] <url>\n")
+		return
+	}
+	reqlatency(numCon, numReq, conType)
+	// orderedReq(numCon, numReq, srvCnt)
 }
