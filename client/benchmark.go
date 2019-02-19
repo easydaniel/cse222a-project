@@ -141,7 +141,7 @@ func reqlatency(numCon, numReq, conType int) {
 	close(message)
 	// fmt.Fprintf(os.Stderr, "Total: %d, Num: %d, Con: %d\n", len(status[200]), numReq, numCon)
 	failRate := float32(len(status[-1])) / (float32(numReq) * float32(numCon))
-	throughput := (float32(numReq) * float32(numCon)) / (float32(duration) / 1000000)
+	throughput := (float32(numReq) * float32(numCon)) / (float32(duration) / 1000000000)
 	avgLatency := float32(0)
 	for _, latency := range status[200] {
 		avgLatency = avgLatency + latency
