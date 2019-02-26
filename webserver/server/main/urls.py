@@ -23,4 +23,6 @@ urlpatterns = [
     path('removeData', views.removeData),
     path('pingOther', views.pingOther),
     path('queryData', views.queryData),
+    path('uploadFile', views.uploadFile),
+    path('uploadFileHandler', views.uploadFileHandler)
 ]

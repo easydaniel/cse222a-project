@@ -4,7 +4,9 @@ from random import randint
 from .models import Client
 import requests
 from django.core.files.storage import FileSystemStorage
-import uuid
+import uuid, os
+from django.test import Client
+from .models import Upload
 # Create your views here.
 
 
@@ -50,9 +52,28 @@ def queryData(request):
 def uploadFile(request):
     size = request.GET.get("size", "100")
     filename = str(uuid.uuid4())
-
-    fs = FileSystemStorage()
+    c = Client()
+    with open(filename, "wb") as fp:
+        fp.write(os.urandom(int(size)))
+    fp.close()
+    with open(filename, "rb") as fp:
+        # print(c.get("/main/uploadFileHandler"))
+        response = c.post("/main/uploadFileHandler", {"name": filename, "fileData": fp})
+    fp.close()
+    os.remove(fp.name)
+    print(response)
     return HttpResponse("Upload Done. Size: " + size)
+
+
+def uploadFileHandler(request):
+    if request.method == "POST":
+        name = request.POST["name"]
+        fileData = request.FILES["fileData"]
+        upload = Upload(name=name, file=fileData)
+        upload.save()
+    elif request.method == "GET":
+        print("GET")
+    return HttpResponse("Return uploadFileHandler")
 
 
 def pingOther(request):
