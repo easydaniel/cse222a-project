@@ -3,6 +3,8 @@ import time
 from random import randint
 from .models import Client
 import requests
+from django.core.files.storage import FileSystemStorage
+import uuid
 # Create your views here.
 
 
@@ -43,6 +45,14 @@ def queryData(request):
     age = request.GET.get("age", "20")
     amount = Client.objects.filter(Age__lte=age).count()
     return HttpResponse("Query Done. Age(Smaller): " + str(age) + ", Amount: " + str(amount))
+
+
+def uploadFile(request):
+    size = request.GET.get("size", "100")
+    filename = str(uuid.uuid4())
+
+    fs = FileSystemStorage()
+    return HttpResponse("Upload Done. Size: " + size)
 
 
 def pingOther(request):
