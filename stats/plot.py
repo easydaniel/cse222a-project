@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 import numpy as np
 
-REQLAT_PATH = './reqlat.ds.2'
+REQLAT_PATH = './50c1p15t'
 
 
 def plot(tp=0):
@@ -26,7 +26,7 @@ def plot(tp=0):
         sns.lineplot(x=xticks, y=dataset[:, tp]
                      [i*len(xticks): (i+1)*len(xticks)], label=labels[i])
     fname = ['failrate.png', 'reqlatency.png', 'throughput.png']
-    plt.savefig(fname[tp])
+    plt.savefig(f'{REQLAT_PATH[2:]}-{fname[tp]}')
 
 
 if __name__ == "__main__":
