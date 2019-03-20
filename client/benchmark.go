@@ -96,19 +96,19 @@ func consumer(reqCnt int, works chan Request, message chan Status) {
 
 	for idx := 0; idx < reqCnt; idx++ {
 		req := <-works
-		fmt.Println(req)
-		// qstr := qs(req.params)
-		// endpoint := fmt.Sprintf("%s?%s", req.url, qstr)
+		qstr := qs(req.params)
+		endpoint := fmt.Sprintf("%s?%s", req.url, qstr)
+		// fmt.Println(endpoint)
 		start := time.Now()
-		// resp, err := http.Get(endpoint)
+		resp, err := http.Get(endpoint)
 		latency := time.Since(start)
 		code := -1
-		// if err != nil {
-		// 	// fmt.Println(err)
-		// } else {
-		// 	code = resp.StatusCode
-		// 	resp.Body.Close()
-		// }
+		if err != nil {
+		//	fmt.Println(err)
+		} else {
+			code = resp.StatusCode
+			resp.Body.Close()
+		}
 		message <- Status{latency, code}
 	}
 }
@@ -154,15 +154,23 @@ func orderedReq(numCon, numReq, srvCnt int) {
 	works := make(chan Request, numCon*numReq)
 	status := make(map[int][]float32)
 	url := flag.Arg(0)
+	start := time.Now()
 	for idx := 0; idx < numCon*numReq; idx++ {
 		params := make(map[string]string)
-
+/*
 		if idx%srvCnt == 0 {
-			params["amount"] = "100000"
+			params["period"] = "500"
 		} else {
-			params["amount"] = "1000"
+			params["period"] = "100"
 		}
-
+*/
+		params["period_s"] = "100"
+		params["period_not_s"] = "500"
+		if idx % 2 == 4 {
+			params["server"] = "52.41.69.101"
+		} else {
+			params["server"] = "34.212.92.108"
+		}
 		works <- Request{url, params}
 	}
 	for idx := 0; idx < numCon; idx++ {
@@ -176,14 +184,16 @@ func orderedReq(numCon, numReq, srvCnt int) {
 		}
 	}()
 	wg.Wait()
+	duration := time.Since(start)
 	close(message)
 	// fmt.Fprintf(os.Stderr, "Total: %d, Num: %d, Con: %d\n", len(status[200]), numReq, numCon)
 	failRate := float32(len(status[-1])) / (float32(numReq) * float32(numCon))
+	throughput := (float32(numReq) * float32(numCon)) / (float32(duration) / 1000000000)
 	avgLatency := float32(0)
 	for _, latency := range status[200] {
 		avgLatency = avgLatency + latency
 	}
-	fmt.Printf("%f %f\n", failRate, avgLatency/float32(len(status[200])))
+	fmt.Printf("%f %f %f\n", failRate, avgLatency/float32(len(status[200])), throughput)
 }
 
 func main() {
@@ -200,6 +210,6 @@ func main() {
 		fmt.Printf("Usage: benchmark [options] <url>\n")
 		return
 	}
-	reqlatency(numCon, numReq, conType)
-	// orderedReq(numCon, numReq, srvCnt)
+	// reqlatency(numCon, numReq, conType)
+	orderedReq(numCon, numReq, srvCnt)
 }
