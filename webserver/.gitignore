@@ -1,0 +1,9 @@
+env/
+*.pyc
+server/main/migrations/
+
+# Elastic Beanstalk Files
+server/.elasticbeanstalk/*
+!server/.elasticbeanstalk/*.cfg.yml
+!server/.elasticbeanstalk/*.global.yml
+server/.ebextensions/
