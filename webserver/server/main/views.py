@@ -80,3 +80,16 @@ def pingOther(request):
     ip = request.GET.get("ip")
     result = requests.get("http://" + ip + "/main/")
     return HttpResponse(result)
+
+
+def notServerOtherPeriod(request):
+    host = request.get_host()
+    server = request.GET.get("server")
+    period_s = int(request.GET.get('period_s', '5')) / 1000
+    period_not_s = int(request.GET.get('period_not_s', '5')) / 1000
+    if host == server:
+        time.sleep(float(period_s))
+        return HttpResponse("Sleep done(s). Time: " + time.ctime() + " Period = " + str(period_s))
+    else:
+        time.sleep(float(period_not_s))
+        return HttpResponse("Sleep done(not_s). Time: " + time.ctime() + " Period = " + str(period_not_s))

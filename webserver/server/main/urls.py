@@ -24,5 +24,6 @@ urlpatterns = [
     path('pingOther', views.pingOther),
     path('queryData', views.queryData),
     path('uploadFile', views.uploadFile),
-    path('uploadFileHandler', views.uploadFileHandler)
+    path('uploadFileHandler', views.uploadFileHandler),
+    path('notServerOtherPeriod', views.notServerOtherPeriod)
 ]
